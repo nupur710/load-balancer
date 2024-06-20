@@ -14,7 +14,7 @@ public class Server {
 
     public static void main(String[] args) {
     try {
-        serverSocket = new ServerSocket(8888);
+        serverSocket = new ServerSocket(9999);
         socket= serverSocket.accept();
         input= new DataInputStream(socket.getInputStream());
         output= new DataOutputStream(socket.getOutputStream());

@@ -16,7 +16,7 @@ public class Client {
             socket = new Socket("localhost", 8888);
             output= new DataOutputStream(socket.getOutputStream());
             input= new DataInputStream(socket.getInputStream());
-            output.writeUTF("hello from cient");
+            output.writeUTF("hello from client");
             String response= input.readUTF();
             System.out.println(response);
         } catch (IOException e) {
