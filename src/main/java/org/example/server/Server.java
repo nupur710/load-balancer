@@ -6,26 +6,45 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Server {
+public class Server implements Runnable{
 
     private ServerSocket serverSocket;
     private Socket socket;
     private DataInputStream input;
     private DataOutputStream output;
+    private int port;
 
-    public Server(int port) throws IOException {
-        serverSocket= new ServerSocket(port);
-        socket= serverSocket.accept();
-        System.out.println("Server running in port " + port);
+    public Server(int port) {
+        this.port= port;
     }
 
-    public String readInput() throws IOException {
-        input= new DataInputStream(socket.getInputStream());
-        return input.readUTF();
-    }
 
-    public void writeOutput(String text) throws IOException {
-        output= new DataOutputStream(socket.getOutputStream());
-        output.writeUTF(text);
+    //contain code that will run in thread
+    @Override
+    public void run() {
+        try {
+            serverSocket= new ServerSocket(port);
+            System.out.println("Server running at port " + port);
+            while(true) {
+                socket= serverSocket.accept();
+                input= new DataInputStream(socket.getInputStream());
+                output= new DataOutputStream(socket.getOutputStream());
+                String recieved= input.readUTF();
+                System.out.println("Server at port " + port + " received from client: " + recieved);
+                String response= "Response from server running at port " + port;
+                output.writeUTF(response);
+                socket.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if(serverSocket != null) {
+                    serverSocket.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

@@ -7,30 +7,25 @@ import java.net.Socket;
 
 public class Client {
 
-    static Socket socket= null;
-    static Socket socket2= null;
-    static Socket socket3= null;
-    static DataInputStream input= null;
-    static DataInputStream input2= null;
-    static DataInputStream input3= null;
-    static DataOutputStream output= null;
-    static DataOutputStream output2= null;
-    static DataOutputStream output3= null;
-
     public static void main(String[] args) throws IOException {
-        socket= new Socket("localhost", 8080);
-        socket2= new Socket("localhost", 8081);
-        socket3= new Socket("localhost", 8082);
-        output= new DataOutputStream(socket.getOutputStream());
-        output2= new DataOutputStream(socket2.getOutputStream());
-        output3= new DataOutputStream(socket3.getOutputStream());
-        input= new DataInputStream(socket.getInputStream());
-        input2= new DataInputStream(socket2.getInputStream());
-        input3= new DataInputStream(socket3.getInputStream());
-        output.writeUTF("Request from client to server 1");
-        output2.writeUTF("Request from client to server 2");
-        output3.writeUTF("Request from client to server 3");
+       Socket[] sockets= new Socket[3];
+       DataInputStream[] input= new DataInputStream[3];
+       DataOutputStream[] output= new DataOutputStream[3];
+       int[] ports= {8080, 8081, 8082};
+
+       for (int i = 0; i< ports.length; i++) {
+           sockets[i]= new Socket("localhost", ports[i]);
+           input[i]= new DataInputStream(sockets[i].getInputStream());
+           output[i]= new DataOutputStream(sockets[i].getOutputStream());
+           output[i].writeUTF("Client sends request to server at port " + ports[i]);
+           String response= input[i].readUTF();
+           System.out.println("Client recieves response from server at port " + ports[i] + " : " + response);
+       }
+
+       for(int i= 0; i< ports.length; i++) {
+           input[i].close();
+           output[i].close();
+           sockets[i].close();
+       }
     }
-
-
 }
