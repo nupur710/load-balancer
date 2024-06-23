@@ -25,7 +25,7 @@ public class Client implements Runnable {
     public void run() {
         try {
             req = new DataOutputStream(socket.getOutputStream());
-            req.writeUTF("Sending req " + requestId);
+            req.writeUTF("Request " + requestId);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
