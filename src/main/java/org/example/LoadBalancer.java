@@ -9,8 +9,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class LoadBalancer {
-    static private int port= 8080;
-
+    static private int startPort= 8080;
+    static private int noOfServersToRun= 10;
+    static private int portToRun= startPort;
     public static void main(String[] args) throws IOException, InterruptedException {
         ServerSocket loadBalancer= new ServerSocket(1221);
         while(true) {
@@ -19,12 +20,15 @@ public class LoadBalancer {
             String ip = inputStream.readUTF();
             //if(lbSocket.isConnected()) System.out.println("connected!");
             System.out.println("To loadbalancer: " + ip);
-            if(port > 8089) { port= 8080; }
-            Socket connectToServer = new Socket("localhost", port);
-            port++;
+            if(portToRun > (startPort+noOfServersToRun)-1) { portToRun= startPort; }
+            Socket connectToServer = new Socket("localhost", portToRun);
+            portToRun++;
             DataOutputStream dataOutputStream = new DataOutputStream(connectToServer.getOutputStream());
             dataOutputStream.writeUTF(ip);
-
+//            dataOutputStream.close();
+//            connectToServer.close();
+//            inputStream.close();
+//            lbSocket.close();
         }
     }
 }
