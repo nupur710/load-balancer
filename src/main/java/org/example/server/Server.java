@@ -1,8 +1,6 @@
 package org.example.server;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -29,8 +27,13 @@ public class Server implements Runnable{
                 socket= serverSocket.accept();
                 input= new DataInputStream(socket.getInputStream());
                 output= new DataOutputStream(socket.getOutputStream());
-                String recieved= input.readUTF();
-                System.out.println("Server at port " + port + " received from client: " + recieved);
+                BufferedReader br= new BufferedReader(new InputStreamReader(input));
+                String line;
+                StringBuilder inputFromLB= new StringBuilder();
+                while((line= br.readLine()) != null && !line.isEmpty()) {
+                    inputFromLB.append(line);
+                }
+                System.out.println(inputFromLB.toString());
                 String response= "Response from server running at port " + port;
                 output.writeUTF(response);
                 socket.close();

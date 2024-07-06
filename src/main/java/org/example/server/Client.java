@@ -7,6 +7,10 @@ import java.net.Socket;
 
 public class Client implements Runnable {
 
+    static class Request {
+
+    }
+
     private Socket socket;
     private DataInputStream res;
     private DataOutputStream req;
