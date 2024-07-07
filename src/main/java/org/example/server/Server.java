@@ -11,7 +11,7 @@ public class Server implements Runnable{
     private Socket socket;
     private DataInputStream input;
     private DataOutputStream output;
-    private static int port;
+    private int port;
     private static String CRLF= "\r\n";
 
     public Server(int port) {
@@ -54,7 +54,7 @@ public class Server implements Runnable{
         }
     }
 
-    public static String parseRequest(String request) {
+    public String parseRequest(String request) {
         String[] cd= request.split(" ");
         String http= cd[2].substring(0, 8);
         String responseBody= "Response successfully recieved from server running at port " + port;
