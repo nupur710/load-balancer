@@ -1,3 +1,4 @@
+
 package org.example.server;
 
 import java.io.*;
@@ -10,7 +11,8 @@ public class Server implements Runnable{
     private Socket socket;
     private DataInputStream input;
     private DataOutputStream output;
-    private int port;
+    private static int port;
+    private static String CRLF= "\r\n";
 
     public Server(int port) {
         this.port= port;
@@ -33,10 +35,11 @@ public class Server implements Runnable{
                 while((line= br.readLine()) != null && !line.isEmpty()) {
                     inputFromLB.append(line);
                 }
-                System.out.println(inputFromLB.toString());
-                String response= "Response from server running at port " + port;
-                output.writeUTF(response);
-                socket.close();
+                String response= parseRequest(inputFromLB.toString());
+                output.writeBytes(response);
+                output.flush();
+                output.close();
+                //socket.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -49,5 +52,18 @@ public class Server implements Runnable{
                 e.printStackTrace();
             }
         }
+    }
+
+    public static String parseRequest(String request) {
+        String[] cd= request.split(" ");
+        String http= cd[2].substring(0, 8);
+        String responseBody= "Response successfully recieved from server running at port " + port;
+        String response = http+" 200 OK" + CRLF +
+                "Content-Type: text/plain" + CRLF +
+                "Content-Length: " + responseBody.length() + CRLF +
+                CRLF +
+                responseBody;
+        System.out.println(response);
+        return response;
     }
 }

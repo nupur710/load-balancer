@@ -2,10 +2,7 @@ package org.example;
 
 import org.example.server.Server;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -17,8 +14,8 @@ public class LoadBalancer {
         ServerSocket loadBalancer= new ServerSocket(1221); //client will send request to port 1221
         while(true) {
             Socket lbSocket = loadBalancer.accept();
-            //Read request from client
             DataInputStream lbClient= new DataInputStream(lbSocket.getInputStream());
+            DataOutputStream lbClientOutput= new DataOutputStream(lbSocket.getOutputStream());
             if(portToRun > (serversStartPort+noOfServersToRun)-1) { portToRun= serversStartPort; }
             Socket connectToServer = new Socket("localhost", portToRun);
             portToRun++;
@@ -26,52 +23,29 @@ public class LoadBalancer {
             DataOutputStream lbServer= new DataOutputStream(connectToServer.getOutputStream());
             byte[] buffer= new byte[8192];
             int bytesRead;
-            while((bytesRead= lbClient.read(buffer)) != -1) //reads buffer.length bytes of data from input stream & stores it into buffer array
+            while(lbClient.available() > 0 && (bytesRead= lbClient.read(buffer)) != -1) //reads buffer.length bytes of data from input stream & stores it into buffer array
             {
-                System.out.print((char) bytesRead);
                 lbServer.write(buffer, 0, bytesRead);
             }
             lbServer.flush();
-//            DataInputStream inputStream = new DataInputStream(lbSocket.getInputStream());
-//            String ip = inputStream.readUTF();
-            //if(lbSocket.isConnected()) System.out.println("connected!");
+            //Read Response from server
+            DataInputStream lbServerResp = new DataInputStream(connectToServer.getInputStream());
+            ByteArrayOutputStream responseBuffer = new ByteArrayOutputStream();
 
-
-
-
-
-            //System.out.println("To loadbalancer: " + ip);
-
-            //DataOutputStream dataOutputStream = new DataOutputStream(connectToServer.getOutputStream());
-            //dataOutputStream.writeUTF(ip);
-
-            /**Read req from client **/
-            DataInputStream clientInputStream= new DataInputStream(lbSocket.getInputStream());
-            StringBuilder requestBuilder= new StringBuilder();
-            String line;
-            while(!(line= clientInputStream.readLine()).isEmpty()) {
-                requestBuilder.append(line);
+            while ((bytesRead = lbServerResp.read(buffer)) != -1) {
+                responseBuffer.write(buffer, 0, bytesRead);
             }
 
-            System.out.println(" * * * " + requestBuilder);
-            /**Write req to server **/
-            DataOutputStream writeToServerStream= new DataOutputStream(connectToServer.getOutputStream());
-            writeToServerStream.writeBytes(requestBuilder.toString());
-            //Read response from server
-            DataInputStream serverStreamResponse= new DataInputStream(connectToServer.getInputStream());
-//            byte[] buffer= new byte[1024];
-//            int bytesRead;
-//            DataOutputStream lbOutputStream= new DataOutputStream(lbSocket.getOutputStream());
-//            while((bytesRead = serverStreamResponse.read(buffer)) != -1) {
-//                System.out.println((char)bytesRead);
-//                lbOutputStream.write(buffer, 0, bytesRead);
-//            }
+            String responseFromServer = responseBuffer.toString();
+            System.out.println(responseFromServer);
 
+            lbClientOutput.write(responseBuffer.toByteArray());
+            lbClientOutput.flush();
+            lbClient.close();
+            lbClientOutput.close();
+            lbServerResp.close();
             connectToServer.close();
             lbSocket.close();
-
-//            dataOutputStream.close();
-//            inputStream.close();
 
         }
     }
