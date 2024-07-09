@@ -11,7 +11,7 @@ public class SendRequest {
             ProcessBuilder processBuilder= new ProcessBuilder(cmd.split(" "));
             processBuilder.directory(new File("\\Users\\lenovo"));
             Process process = processBuilder.start();
-            Client client1 = new Client(processBuilder, process);
+            Client client1 = new Client(process);
             Thread requests = new Thread(client1);
             requests.start();
             int exitCode = process.waitFor();

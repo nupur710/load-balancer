@@ -3,7 +3,7 @@ package org.example;
 import org.example.server.Server;
 public class MultipleServers {
     public static void main(String[] args) {
-        int noOfServers= 2;
+        int noOfServers= 3;
         int startingPort= 8080;
         for(int i= 0; i< noOfServers; i++) {
             Server server= new Server(startingPort);

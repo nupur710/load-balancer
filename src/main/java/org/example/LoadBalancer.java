@@ -8,7 +8,7 @@ import java.net.Socket;
 
 public class LoadBalancer {
     static private int serversStartPort= 8080;
-    static private int noOfServersToRun= 2;
+    static private int noOfServersToRun= 3;
     static private int portToRun= serversStartPort;
     public static void main(String[] args) throws IOException, InterruptedException {
         ServerSocket loadBalancer= new ServerSocket(1221); //client will send request to port 1221
@@ -46,7 +46,6 @@ public class LoadBalancer {
             lbServerResp.close();
             connectToServer.close();
             lbSocket.close();
-
         }
     }
 }

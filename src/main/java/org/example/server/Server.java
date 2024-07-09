@@ -19,7 +19,6 @@ public class Server implements Runnable{
     }
 
 
-    //contain code that will run in thread
     @Override
     public void run() {
         try {
@@ -39,7 +38,6 @@ public class Server implements Runnable{
                 output.writeBytes(response);
                 output.flush();
                 output.close();
-                //socket.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -47,6 +45,7 @@ public class Server implements Runnable{
             try {
                 if(serverSocket != null) {
                     serverSocket.close();
+                    socket.close();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -57,13 +56,12 @@ public class Server implements Runnable{
     public String parseRequest(String request) {
         String[] cd= request.split(" ");
         String http= cd[2].substring(0, 8);
-        String responseBody= "Response successfully recieved from server running at port " + port;
+        String responseBody= "Response 200 OK successfully received from server running at port " + port;
         String response = http+" 200 OK" + CRLF +
                 "Content-Type: text/plain" + CRLF +
                 "Content-Length: " + responseBody.length() + CRLF +
                 CRLF +
                 responseBody;
-        System.out.println(response);
         return response;
     }
 }
