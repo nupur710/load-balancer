@@ -22,7 +22,7 @@ public class LoadBalancer {
             Socket lbSocket = loadBalancer.accept();
             DataInputStream lbClient = new DataInputStream(lbSocket.getInputStream());
             DataOutputStream lbClientOutput = new DataOutputStream(lbSocket.getOutputStream());
-            if (portToRun >  ((serversStartPort + healthyServers.size()) - 1)) {
+            if (portToRun >  ((serversStartPort + noOfServersToRun) - 1)) {
                 portToRun = healthyServers.get(0);
                 i= 0;
             }
