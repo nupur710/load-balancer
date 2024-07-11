@@ -8,12 +8,13 @@ import java.util.List;
 
 public class LoadBalancer {
     static private int serversStartPort = 8080;
-    static private int noOfServersToRun = 3;
+    static private int noOfServersToRun = 5;
     static private int portToRun = serversStartPort;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Health health = new Health(noOfServersToRun, serversStartPort);
         List<Integer> healthyServers= health.healthyServers();
+        System.out.println("Healthy servers: " + healthyServers);
         int i= 0;
         portToRun= healthyServers.get(0);
         ServerSocket loadBalancer = new ServerSocket(1221); //client will send request to port 1221
@@ -27,8 +28,10 @@ public class LoadBalancer {
             }
             Socket connectToServer = new Socket("localhost", portToRun);
             i++;
-            if(i < (healthyServers.size()-1)) {
+            if(i <= (healthyServers.size()-1)) {
                 portToRun= healthyServers.get(i);
+            } else {
+                portToRun= healthyServers.get(i-1)+1;
             }
 
             //Send request to server

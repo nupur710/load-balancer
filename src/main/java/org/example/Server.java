@@ -1,5 +1,5 @@
 
-package org.example.server;
+package org.example;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -56,12 +56,13 @@ public class Server implements Runnable{
     public String parseRequest(String request) {
         String[] cd= request.split(" ");
         String http= cd[2].substring(0, 8);
-        String responseBody= "Response 200 OK successfully received from server running at port " + port;
+        String responseBody= "Response 200OK successfully received from server running at port " + port;
         String response = http+" 200 OK" + CRLF +
                 "Content-Type: text/plain" + CRLF +
                 "Content-Length: " + responseBody.length() + CRLF +
                 CRLF +
                 responseBody;
+        System.out.println(response);
         return response;
     }
 }
