@@ -11,8 +11,7 @@ public class Client implements Runnable {
 
     @Override
     public void run() {
-        try( BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        ) {
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));) {
             StringBuilder response = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
@@ -20,7 +19,7 @@ public class Client implements Runnable {
             }
             System.out.println(response);
         } catch (IOException e) {
-            e.printStackTrace();
+           System.err.println("Error reading input " + e.getMessage());
         }
     }
 }
