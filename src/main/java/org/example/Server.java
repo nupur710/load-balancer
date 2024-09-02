@@ -25,22 +25,28 @@ public class Server implements Runnable{
             serverSocket= new ServerSocket(port);
             System.out.println("Server running at port " + port);
             while(true) {
-                socket= serverSocket.accept();
-                input= new DataInputStream(socket.getInputStream());
-                output= new DataOutputStream(socket.getOutputStream());
-                BufferedReader br= new BufferedReader(new InputStreamReader(input));
-                String line;
-                StringBuilder inputFromLB= new StringBuilder();
-                while((line= br.readLine()) != null && !line.isEmpty()) {
-                    inputFromLB.append(line);
+                try {
+                    socket = serverSocket.accept();
+                    input = new DataInputStream(socket.getInputStream());
+                    output = new DataOutputStream(socket.getOutputStream());
+                    BufferedReader br = new BufferedReader(new InputStreamReader(input));
+                    String line;
+                    StringBuilder inputFromLB = new StringBuilder();
+                    while ((line = br.readLine()) != null && !line.isEmpty()) {
+                        inputFromLB.append(line);
+                    }
+                    String response = parseRequest(inputFromLB.toString());
+                    output.writeBytes(response);
+                    output.flush();
+                    br.close();
+                    input.close();
+                    output.close();
+                } catch (IOException e) {
+                    System.err.println("Error handling request at port " + port + ": " +e.getMessage());
                 }
-                String response= parseRequest(inputFromLB.toString());
-                output.writeBytes(response);
-                output.flush();
-                output.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error starting server at port " + port + ": " + e.getMessage());
         } finally {
             try {
                 if(serverSocket != null) {
@@ -48,7 +54,7 @@ public class Server implements Runnable{
                     socket.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Error closing socket at port " + port + ": "+ " e.getMessage()");
             }
         }
     }
