@@ -15,8 +15,7 @@ public class SendRequest {
             Thread requests = new Thread(client1);
             requests.start();
             int exitCode = process.waitFor();
-            if (exitCode == 0) {
-            } else {
+            if (exitCode != 0) {
                 System.err.println("Curl command failed with exit code " + exitCode);
             }
             process.destroy();
