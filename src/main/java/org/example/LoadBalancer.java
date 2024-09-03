@@ -8,30 +8,38 @@ import java.util.List;
 
 public class LoadBalancer {
     static private int serversStartPort = 8080;
-    static private int noOfServersToRun = 3;
+    static private int noOfServersToRun = 5;
     static private int portToRun = serversStartPort;
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Health health = new Health(noOfServersToRun, serversStartPort);
-        List<Integer> healthyServers= health.healthyServers();
-        System.out.println("Healthy servers: " + healthyServers);
+        List<Server> serversRunning= new ArrayList<>();
+        for(int i= 0; i < noOfServersToRun; i++) {
+            serversRunning.add(new Server(portToRun+i));
+        }
         int i= 0;
-        portToRun= healthyServers.get(0);
+        portToRun= serversRunning.get(0).getPort();
+        HealthCheck healthCheck= new HealthCheck(serversRunning);
+        healthCheck.run();
+        List<Server> healthyServers= healthCheck.getHealthyServers();
+        for ( Server s : healthyServers) {
+            System.out.println("Healthy servers running at ports: " + s.getPort());
+        }
+        if(healthyServers.isEmpty()) System.out.println("No healthy servers");
         try (ServerSocket loadBalancer = new ServerSocket(1221);) {
             while (true) {
                 try (Socket lbSocket = loadBalancer.accept();
                      DataInputStream lbClient = new DataInputStream(lbSocket.getInputStream());
                      DataOutputStream lbClientOutput = new DataOutputStream(lbSocket.getOutputStream());) {
                     if (portToRun > ((serversStartPort + noOfServersToRun) - 1)) {
-                        portToRun = healthyServers.get(0);
+                        portToRun = healthyServers.get(0).getPort();
                         i = 0;
                     }
                     Socket connectToServer = new Socket("localhost", portToRun);
                     i++;
                     if (i <= (healthyServers.size() - 1)) {
-                        portToRun = healthyServers.get(i);
+                        portToRun = healthyServers.get(i).getPort();
                     } else {
-                        portToRun = healthyServers.get(i - 1) + 1;
+                        portToRun = healthyServers.get(i - 1).getPort() + 1;
                     }
                     //Send request to server
                     DataOutputStream lbServer = new DataOutputStream(connectToServer.getOutputStream());
@@ -66,30 +74,6 @@ public class LoadBalancer {
         }
     }
 
-    static class Health {
-        int noOfServers;
-        int startPort;
-
-        Health(int noOfServers, int startPort) {
-            this.noOfServers = noOfServers;
-            this.startPort = startPort;
-        }
-
-        List<Integer> healthyServers() throws IOException {
-            int port = startPort;
-            List<Integer> healthyServers = new ArrayList<>();
-            for (int i = 0; i < noOfServers; i++) {
-                //Send request
-                Process p = sendRequest(port);
-                String status = response(p);
-                if (status.equals("200OK")) {
-                    healthyServers.add(port);
-                }
-                port++;
-            }
-            return healthyServers;
-        }
-
         Process sendRequest(int port) throws IOException {
             String cmd = "curl http://localhost:" + port;
             ProcessBuilder processBuilder = new ProcessBuilder(cmd.split(" "));
@@ -115,6 +99,5 @@ public class LoadBalancer {
                 e.printStackTrace();
             }
             return response.toString().split(" ")[1];
-        }
     }
 }

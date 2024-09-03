@@ -18,6 +18,9 @@ public class Server implements Runnable{
         this.port= port;
     }
 
+    public int getPort() {
+        return port;
+    }
 
     @Override
     public void run() {

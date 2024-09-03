@@ -30,4 +30,7 @@ public class HealthCheck implements Runnable {
             return false;
         }
     }
+    public List<Server> getHealthyServers() {
+        return healthyServer;
+    }
 }
