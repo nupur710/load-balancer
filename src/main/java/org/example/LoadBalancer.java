@@ -10,8 +10,9 @@ public class LoadBalancer {
     static private int serversStartPort = 8080;
     static private int noOfServersToRun = 5;
     static private int portToRun = serversStartPort;
+    static private byte[] buffer= new byte[8192];
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) {
         List<Server> serversRunning= new ArrayList<>();
         for(int i= 0; i < noOfServersToRun; i++) {
             serversRunning.add(new Server(portToRun+i));
@@ -34,70 +35,46 @@ public class LoadBalancer {
                         portToRun = healthyServers.get(0).getPort();
                         i = 0;
                     }
-                    Socket connectToServer = new Socket("localhost", portToRun);
-                    i++;
-                    if (i <= (healthyServers.size() - 1)) {
-                        portToRun = healthyServers.get(i).getPort();
-                    } else {
-                        portToRun = healthyServers.get(i - 1).getPort() + 1;
+                    try (Socket connectToServer = new Socket("localhost", portToRun);
+                         DataOutputStream lbServer= new DataOutputStream(connectToServer.getOutputStream());
+                         DataInputStream lbServerResp = new DataInputStream(connectToServer.getInputStream());) {
+                        i++;
+                        if (i <= (healthyServers.size() - 1)) {
+                            portToRun = healthyServers.get(i).getPort();
+                        } else {
+                            portToRun = healthyServers.get(i - 1).getPort() + 1;
+                        }
+                        int bytesRead = sendRequest(lbClient, lbServer);
+                        readResponse(lbClientOutput, lbServerResp, bytesRead);
+                    } catch(IOException e) {
+                        System.err.println("Error connecting to server: " + e.getMessage());
                     }
-                    //Send request to server
-                    DataOutputStream lbServer = new DataOutputStream(connectToServer.getOutputStream());
-                    byte[] buffer = new byte[8192];
-                    int bytesRead;
-                    while (lbClient.available() > 0 && (bytesRead = lbClient.read(buffer)) != -1) //reads buffer.length bytes of data from input stream & stores it into buffer array
-                    {
-                        lbServer.write(buffer, 0, bytesRead);
-                    }
-                    lbServer.flush();
-                    System.out.println("Send req to server");
-                    //Read Response from server
-                    DataInputStream lbServerResp = new DataInputStream(connectToServer.getInputStream());
-                    ByteArrayOutputStream responseBuffer = new ByteArrayOutputStream();
-                    while ((bytesRead = lbServerResp.read(buffer)) != -1) {
-                        responseBuffer.write(buffer, 0, bytesRead);
-                    }
-                    String responseFromServer = responseBuffer.toString();
-                    System.out.println("Resp received from server:\n" + responseFromServer);
-                    lbClientOutput.write(responseBuffer.toByteArray());
-                    lbClientOutput.flush();
-                    lbServerResp.close();
-                    lbServer.close();
-                    connectToServer.close();
                 } catch (IOException e) {
-                    System.err.println("Error handling client connection " + e.getMessage());
-                    break; //break out of loop
+                    System.err.println("Error handling client connection: " + e.getMessage());
                 }
             }
         } catch (IOException e) {
             System.err.println("Error in load balancer: " + e.getMessage());
         }
     }
-
-        Process sendRequest(int port) throws IOException {
-            String cmd = "curl http://localhost:" + port;
-            ProcessBuilder processBuilder = new ProcessBuilder(cmd.split(" "));
-            processBuilder.directory(new File("\\Users\\lenovo"));
-            Process process = processBuilder.start();
-            return process;
+    private static int sendRequest(DataInputStream dis, DataOutputStream dos) throws IOException {
+        int bytesRead = 0;
+        while(dis.available() > 0 && (bytesRead= dis.read(buffer)) != -1) {
+            dos.write(buffer, 0, bytesRead);
         }
-
-        String response(Process process) throws IOException {
-            StringBuilder response = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            ) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line).append("\n");
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                process.waitFor();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return response.toString().split(" ")[1];
+        dos.flush();
+        return bytesRead;
     }
+
+    private static void readResponse(DataOutputStream dos, DataInputStream dis, int bytesRead) throws IOException {
+        ByteArrayOutputStream responseBuffer= new ByteArrayOutputStream();
+        while((bytesRead= dis.read(buffer)) != -1) {
+            responseBuffer.write(buffer, 0, bytesRead);
+        }
+        String responseFromServer= responseBuffer.toString();
+        System.out.println("Resp received from server:\n" + responseFromServer);
+        dos.write(responseBuffer.toByteArray());
+        dos.flush();
+    }
+
 }
