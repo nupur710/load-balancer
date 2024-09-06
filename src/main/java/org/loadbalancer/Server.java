@@ -1,5 +1,5 @@
 
-package org.example;
+package org.loadbalancer;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -46,6 +46,7 @@ public class Server implements Runnable{
         }
     }
 
+
     public String parseRequest(String request) {
         String[] cd= request.split(" ");
         String http= cd[2].substring(0, 8);
@@ -57,5 +58,23 @@ public class Server implements Runnable{
                 responseBody;
         System.out.println(response);
         return response;
+    }
+
+    /**
+     * Compare server objects for equality based on port no. value. If current
+     * obj
+     *
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this== obj) return true;
+        if(obj== null || getClass() != obj.getClass()) return false;
+        Server server= (Server) obj;
+        return port== server.port;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(this.port);
     }
 }
