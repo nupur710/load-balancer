@@ -1,7 +1,6 @@
-package org.example;
+package org.loadbalancer;
 
 import java.io.*;
-import java.net.Socket;
 
 public class Client implements Runnable {
     Process process;

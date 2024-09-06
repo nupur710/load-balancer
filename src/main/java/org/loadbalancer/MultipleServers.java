@@ -1,4 +1,4 @@
-package org.example;
+package org.loadbalancer;
 
 public class MultipleServers {
     public static void main(String[] args) {

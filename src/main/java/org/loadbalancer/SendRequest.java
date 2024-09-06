@@ -1,4 +1,4 @@
-package org.example;
+package org.loadbalancer;
 
 import java.io.File;
 import java.io.IOException;

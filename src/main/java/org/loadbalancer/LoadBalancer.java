@@ -1,4 +1,4 @@
-package org.example;
+package org.loadbalancer;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -19,8 +19,8 @@ public class LoadBalancer {
         }
         int i= 0;
         portToRun= serversRunning.get(0).getPort();
-        HealthCheck healthCheck= new HealthCheck(serversRunning);
-        healthCheck.run();
+        HealthCheck healthCheck= new HealthCheck(serversRunning, 30);
+        healthCheck.startScheduler();
         List<Server> healthyServers= healthCheck.getHealthyServers();
         for ( Server s : healthyServers) {
             System.out.println("Healthy servers running at ports: " + s.getPort());

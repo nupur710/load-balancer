@@ -1,18 +1,13 @@
 
-package org.example;
+package org.loadbalancer;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server implements Runnable{
-
-    private ServerSocket serverSocket;
-    private Socket socket;
-    private DataInputStream input;
-    private DataOutputStream output;
     private int port;
-    private static String CRLF= "\r\n";
+    private static final String CRLF= "\r\n";
 
     public Server(int port) {
         this.port= port;
@@ -24,43 +19,33 @@ public class Server implements Runnable{
 
     @Override
     public void run() {
-        try {
-            serverSocket= new ServerSocket(port);
+        try(ServerSocket serverSocket= new ServerSocket(port)) {
             System.out.println("Server running at port " + port);
             while(true) {
-                try {
-                    socket = serverSocket.accept();
-                    input = new DataInputStream(socket.getInputStream());
-                    output = new DataOutputStream(socket.getOutputStream());
-                    BufferedReader br = new BufferedReader(new InputStreamReader(input));
+                try(Socket socket= serverSocket.accept();
+                    DataOutputStream output= new DataOutputStream(socket.getOutputStream());
+                    BufferedReader br= new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                     String line;
                     StringBuilder inputFromLB = new StringBuilder();
                     while ((line = br.readLine()) != null && !line.isEmpty()) {
                         inputFromLB.append(line);
                     }
                     String response = parseRequest(inputFromLB.toString());
-                    output.writeBytes(response);
+                    output.write(response.getBytes("UTF-8")); //not specifying charsetName throws connection reset by peer exception
                     output.flush();
-                    br.close();
-                    input.close();
-                    output.close();
+                    //wait before closing connection
+                    Thread.sleep(100);
                 } catch (IOException e) {
                     System.err.println("Error handling request at port " + port + ": " +e.getMessage());
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
             }
         } catch (IOException e) {
             System.err.println("Error starting server at port " + port + ": " + e.getMessage());
-        } finally {
-            try {
-                if(serverSocket != null) {
-                    serverSocket.close();
-                    socket.close();
-                }
-            } catch (IOException e) {
-                System.err.println("Error closing socket at port " + port + ": "+ " e.getMessage()");
-            }
         }
     }
+
 
     public String parseRequest(String request) {
         String[] cd= request.split(" ");
@@ -73,5 +58,23 @@ public class Server implements Runnable{
                 responseBody;
         System.out.println(response);
         return response;
+    }
+
+    /**
+     * Compare server objects for equality based on port no. value. If current
+     * obj
+     *
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this== obj) return true;
+        if(obj== null || getClass() != obj.getClass()) return false;
+        Server server= (Server) obj;
+        return port== server.port;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(this.port);
     }
 }
