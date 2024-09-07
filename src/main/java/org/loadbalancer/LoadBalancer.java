@@ -8,7 +8,7 @@ import java.util.List;
 
 public class LoadBalancer {
     static private int serversStartPort = 8080;
-    static private int noOfServersToRun = 5;
+    static private int noOfServersToRun = 3;
     static private int portToRun = serversStartPort;
     static private byte[] buffer= new byte[8192];
 
@@ -25,12 +25,18 @@ public class LoadBalancer {
         for ( Server s : healthyServers) {
             System.out.println("Healthy servers running at ports: " + s.getPort());
         }
-        if(healthyServers.isEmpty()) System.out.println("No healthy servers");
         try (ServerSocket loadBalancer = new ServerSocket(1221);) {
             while (true) {
                 try (Socket lbSocket = loadBalancer.accept();
                      DataInputStream lbClient = new DataInputStream(lbSocket.getInputStream());
                      DataOutputStream lbClientOutput = new DataOutputStream(lbSocket.getOutputStream());) {
+                    //Refresh list of healthy servers for every client request
+                    healthyServers= healthCheck.getHealthyServers();
+                    if(healthyServers.isEmpty()) {
+                        System.err.println("No healthy server available");
+                        lbClientOutput.writeUTF("503 Service Unavailable: No healthy servers");
+                        continue;
+                    }
                     if (portToRun > ((serversStartPort + noOfServersToRun) - 1)) {
                         portToRun = healthyServers.get(0).getPort();
                         i = 0;
