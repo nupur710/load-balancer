@@ -30,12 +30,15 @@ public class HealthCheck implements Runnable {
                 }
                 healthyServer.add(s1);
                 System.out.println("added to lb "+ s1.getPort());
-                System.out.println(healthyServer);
             } else {
-                healthyServer.remove(s1);
-                System.out.println("removed from lb " + s1.getPort());
+                if (healthyServer.remove(s1)) {
+                    System.out.println("removed from lb " + s1.getPort());
+                } else {
+                    System.out.println("Server does not exist in list");
+                }
             }
         }
+        System.out.println("List of healthy servers: " + healthyServer);
     }
     private boolean isServerHealthy(Server server) {
         try {
@@ -48,7 +51,8 @@ public class HealthCheck implements Runnable {
             return false;
         }
     }
-    public List<Server> getHealthyServers() {
-        return healthyServer;
+    public synchronized List<Server> getHealthyServers() { //healthyServer list is accessed by both load balancer round robin logic & health check thread
+        return new ArrayList<>(healthyServer); //return copy of healthyServer list to synchronize access to the list outside this method
+        //this ensures that load balancer uses a copy of the list ensuring consistent data b/w load balancer copy & health check list
     }
 }
