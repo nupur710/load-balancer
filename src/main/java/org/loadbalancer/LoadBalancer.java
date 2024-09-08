@@ -1,5 +1,8 @@
 package org.loadbalancer;
 
+import org.loadbalancer.algorithms.LoadBalancerStrategy;
+import org.loadbalancer.algorithms.RoundRobin;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -11,6 +14,7 @@ public class LoadBalancer {
     static private int noOfServersToRun = 3;
     static private int currentIndex = 0;
     static private byte[] buffer = new byte[8192];
+    static private LoadBalancerStrategy strategy= new RoundRobin();
 
     public static void main(String[] args) {
         List<Server> serversRunning = new ArrayList<>();
@@ -32,9 +36,7 @@ public class LoadBalancer {
                         lbClientOutput.writeUTF("503 Service Unavailable: No healthy servers");
                         continue;
                     }
-                    Server selectedServer = healthyServers.get(currentIndex);
-                    currentIndex = (currentIndex + 1) % healthyServers.size();  // Update index in round-robin fashion
-
+                    Server selectedServer = strategy.selectServer(healthyServers);
                     try (Socket connectToServer = new Socket("localhost", selectedServer.getPort());
                          DataOutputStream lbServer = new DataOutputStream(connectToServer.getOutputStream());
                          DataInputStream lbServerResp = new DataInputStream(connectToServer.getInputStream())) {
