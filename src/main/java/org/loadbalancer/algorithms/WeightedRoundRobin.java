@@ -2,19 +2,11 @@ package org.loadbalancer.algorithms;
 
 import org.loadbalancer.Server;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class WeightedRoundRobin implements LoadBalancerStrategy{
-
-    private Map<Server, Integer> serverWeights= new HashMap<>();
-    private Map<Server, Integer> currentWeights= new HashMap<>();
-    private int currentIndex= 0;
-    public WeightedRoundRobin() {}
-
-    private void assignWeights(List<Server> healthyServers) {
-
-    }
-
     @Override
     public Server selectServer(List<Server> healthyServers)
     {
