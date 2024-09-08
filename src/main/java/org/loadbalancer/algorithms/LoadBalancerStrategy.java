@@ -1,6 +1,6 @@
 package org.loadbalancer.algorithms;
 
-import org.loadbalancer.Server;
+import org.loadbalancer.server.Server;
 
 import java.util.List;
 

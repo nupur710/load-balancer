@@ -1,8 +1,8 @@
 package org.loadbalancer;
 
 import org.loadbalancer.algorithms.LoadBalancerStrategy;
-import org.loadbalancer.algorithms.RoundRobin;
 import org.loadbalancer.algorithms.WeightedRoundRobin;
+import org.loadbalancer.server.Server;
 
 import java.io.*;
 import java.net.ServerSocket;

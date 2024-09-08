@@ -1,9 +1,8 @@
 package org.loadbalancer.algorithms;
 
-import org.loadbalancer.Server;
+import org.loadbalancer.server.Server;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class WeightedRoundRobin implements LoadBalancerStrategy{

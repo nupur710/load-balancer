@@ -1,5 +1,5 @@
 
-package org.loadbalancer;
+package org.loadbalancer.server;
 
 import java.io.*;
 import java.net.ServerSocket;
