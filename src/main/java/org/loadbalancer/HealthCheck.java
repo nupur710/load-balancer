@@ -1,7 +1,13 @@
 package org.loadbalancer;
 
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.loadbalancer.server.Server;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -42,7 +48,19 @@ public class HealthCheck implements Runnable {
         }
         System.out.println("List of healthy servers: " + healthyServer);
     }
+
     private boolean isServerHealthy(Server server) {
+        HttpGet httpGet= new HttpGet("http://localhost:"+server.getPort());
+        try(CloseableHttpClient httpClient= HttpClients.createDefault()) {
+            try(CloseableHttpResponse response= httpClient.execute(httpGet)) {
+                return response.getCode()==200;
+            }
+        } catch (IOException e) {
+            System.err.println("Error sending HTTP HEAD request to check health of server");
+            return false;
+        }
+    }
+    private boolean isServerHealthy2(Server server) {
         try {
             Process process = new ProcessBuilder("curl", "-I", "http://localhost:" + server.getPort()) //http head request
                     .redirectErrorStream(true).start();
