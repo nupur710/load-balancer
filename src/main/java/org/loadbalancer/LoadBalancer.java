@@ -2,12 +2,14 @@ package org.loadbalancer;
 
 import org.loadbalancer.algorithms.LoadBalancerStrategy;
 import org.loadbalancer.algorithms.WeightedRoundRobin;
+import org.loadbalancer.algorithms.RoundRobin;
 import org.loadbalancer.server.Server;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -20,7 +22,7 @@ public class LoadBalancer {
     static private int noOfServersToRun = 3;
     static private int currentIndex = 0;
     static private byte[] buffer = new byte[8192];
-    static private LoadBalancerStrategy strategy= new WeightedRoundRobin();
+    static private LoadBalancerStrategy strategy= new RoundRobin();
 
     public static void main(String[] args) {
         List<Server> serversRunning = new ArrayList<>();
@@ -32,11 +34,12 @@ public class LoadBalancer {
 
         try (ServerSocket loadBalancer = new ServerSocket(1221)) {
             //Handle incoming requests in multiple threads
-            ExecutorService threadPool = Executors.newFixedThreadPool(10);
+            ExecutorService threadPool = Executors.newFixedThreadPool(1);
             while (true) {
                 Socket lbSocket = loadBalancer.accept();
+                InetAddress hostIp= lbSocket.getInetAddress();
                 threadPool.submit(() -> {
-                    handleRequest(lbSocket, healthCheck);
+                    handleRequest(lbSocket, healthCheck, hostIp);
                 });
             }
         } catch (IOException e) {
@@ -44,7 +47,7 @@ public class LoadBalancer {
         }
     }
 
-    private static void handleRequest(Socket lbSocket, HealthCheck healthCheck) {
+    private static void handleRequest(Socket lbSocket, HealthCheck healthCheck, InetAddress hostIp) {
         try (DataInputStream lbClient= new DataInputStream(lbSocket.getInputStream());
             DataOutputStream lbClientOutput= new DataOutputStream(lbSocket.getOutputStream());) {
             // Refresh the list of healthy servers for every client request
@@ -54,11 +57,10 @@ public class LoadBalancer {
                 lbClientOutput.writeUTF("503 Service Unavailable: No healthy servers");
                 return;
             }
-            Server selectedServer = strategy.selectServer(healthyServers);
+            Server selectedServer = strategy.selectServer(healthyServers, hostIp);
             try (Socket connectToServer = new Socket("localhost", selectedServer.getPort());
                  DataOutputStream lbServer = new DataOutputStream(connectToServer.getOutputStream());
                  DataInputStream lbServerResp = new DataInputStream(connectToServer.getInputStream())) {
-
                 // Send client request to selected server
                 int bytesRead = sendRequest(lbClient, lbServer);
 
