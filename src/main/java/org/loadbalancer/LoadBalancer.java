@@ -4,6 +4,7 @@ import org.loadbalancer.algorithms.LoadBalancerStrategy;
 import org.loadbalancer.algorithms.WeightedRoundRobin;
 import org.loadbalancer.algorithms.RoundRobin;
 import org.loadbalancer.server.Server;
+import org.loadbalancer.server.ServerManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -22,12 +23,13 @@ public class LoadBalancer {
     static private int noOfServersToRun = 3;
     static private int currentIndex = 0;
     static private byte[] buffer = new byte[8192];
-    static private LoadBalancerStrategy strategy= new RoundRobin();
+    static private LoadBalancerStrategy strategy= new RoundRobin(12);
 
     public static void main(String[] args) {
         List<Server> serversRunning = new ArrayList<>();
+        System.out.println("server at port 8080 is " + ServerManager.getServer(8080));
         for (int i = 0; i < noOfServersToRun; i++) {
-            serversRunning.add(new Server(serversStartPort + i));
+            serversRunning.add(ServerManager.getServer(serversStartPort+i));
         }
         HealthCheck healthCheck = new HealthCheck(serversRunning, 30);
         healthCheck.startScheduler();

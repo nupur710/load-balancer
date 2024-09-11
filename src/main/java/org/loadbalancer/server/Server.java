@@ -4,11 +4,16 @@ package org.loadbalancer.server;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Server implements Runnable{
     private int port;
+    private AtomicLong lastAccessedTime= new AtomicLong();
     private static final String CRLF= "\r\n";
-
+    /**store a list of server instances. These are started when MultipleServers.java
+     * is run. We will use this to retrieve server running at a port.
+     */
     public Server(int port) {
         this.port= port;
     }
@@ -25,6 +30,7 @@ public class Server implements Runnable{
                 try(Socket socket= serverSocket.accept();
                     DataOutputStream output= new DataOutputStream(socket.getOutputStream());
                     BufferedReader br= new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                    setLastAccessedTime(System.currentTimeMillis());
                     String line;
                     StringBuilder inputFromLB = new StringBuilder();
                     while ((line = br.readLine()) != null && !line.isEmpty()) {
@@ -76,5 +82,13 @@ public class Server implements Runnable{
     @Override
     public int hashCode() {
         return Integer.hashCode(this.port);
+    }
+
+    public long getLastAccessedTime() {
+        return this.lastAccessedTime.get();
+    }
+
+    public void setLastAccessedTime(long lastAccessedTime) {
+        this.lastAccessedTime.set(lastAccessedTime);
     }
 }
