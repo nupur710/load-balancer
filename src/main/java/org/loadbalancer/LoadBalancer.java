@@ -1,5 +1,6 @@
 package org.loadbalancer;
 
+import org.loadbalancer.algorithms.LeastConnections;
 import org.loadbalancer.algorithms.LoadBalancerStrategy;
 import org.loadbalancer.algorithms.WeightedRoundRobin;
 import org.loadbalancer.algorithms.RoundRobin;
@@ -23,7 +24,7 @@ public class LoadBalancer {
     static private int noOfServersToRun = 3;
     static private int currentIndex = 0;
     static private byte[] buffer = new byte[8192];
-    static private LoadBalancerStrategy strategy= new RoundRobin(12);
+    static private LoadBalancerStrategy strategy= new WeightedRoundRobin(12);
 
     public static void main(String[] args) {
         List<Server> serversRunning = new ArrayList<>();

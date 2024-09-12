@@ -13,15 +13,18 @@ public class WeightedRoundRobin implements LoadBalancerStrategy{
     private int currentWeight= 0;
     private List<Integer> weights;
     private ConcurrentHashMap<InetAddress, Server> sessionPersistence= new ConcurrentHashMap<>();
-
+    private final long timeOut;
+    public WeightedRoundRobin(long timeOut) {
+        this.timeOut= timeOut;
+    }
     @Override
     public Server selectServer(List<Server> healthyServers, InetAddress hostIp)
     {
+        Server presentServer= sessionPersistence.get(hostIp);
+        if(presentServer != null && !isSessionExpired(presentServer, this.timeOut)) return presentServer;
         initializeWeight(healthyServers);
         int noOfServers= healthyServers.size();
         int maxWeight= getMaxWeight(weights);
-        Server presentServer= sessionPersistence.get(hostIp);
-        if(presentServer != null) return presentServer;
         while(true) {
             //Increment current index
             currentIndex = (currentIndex + 1) % noOfServers;
@@ -39,7 +42,6 @@ public class WeightedRoundRobin implements LoadBalancerStrategy{
 
         }
     }
-
     private void initializeWeight(List<Server> healthyServers) {
         weights= assignWeight(healthyServers);
     }

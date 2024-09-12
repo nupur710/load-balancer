@@ -17,7 +17,7 @@ public class RoundRobin implements LoadBalancerStrategy{
     private ConcurrentHashMap<InetAddress, Server> sessionPersistence= new ConcurrentHashMap<>();
     @Override
     public Server selectServer(List<Server> healthyServers, InetAddress hostIp) {
-        if(sessionPersistence.get(hostIp)!= null && !isSessionExpired(selectedServer)) {
+        if(sessionPersistence.get(hostIp)!= null && !isSessionExpired(selectedServer, this.timeOut)) {
             selectedServer= sessionPersistence.get(hostIp);
         } else {
             selectedServer = healthyServers.get(currentIndex);
@@ -27,14 +27,4 @@ public class RoundRobin implements LoadBalancerStrategy{
         return selectedServer;
     }
 
-    private boolean isSessionExpired(Server selectedServer) {
-        if(selectedServer== null) return false;
-        long ct= System.currentTimeMillis();
-        System.out.println("current time is " + ct);
-        long lastAccess= selectedServer.getLastAccessedTime();
-        System.out.println("server was last accessed at " + lastAccess);
-        System.out.println("diff is " + (ct-lastAccess));
-        return System.currentTimeMillis() - selectedServer.getLastAccessedTime() > this.timeOut;
-
-    }
 }

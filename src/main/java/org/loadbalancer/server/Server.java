@@ -5,12 +5,14 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Server implements Runnable{
     private int port;
     private AtomicLong lastAccessedTime= new AtomicLong();
     private static final String CRLF= "\r\n";
+    private AtomicInteger activeConnections= new AtomicInteger(0);
     /**store a list of server instances. These are started when MultipleServers.java
      * is run. We will use this to retrieve server running at a port.
      */
@@ -30,6 +32,7 @@ public class Server implements Runnable{
                 try(Socket socket= serverSocket.accept();
                     DataOutputStream output= new DataOutputStream(socket.getOutputStream());
                     BufferedReader br= new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                    activeConnections.getAndIncrement();
                     setLastAccessedTime(System.currentTimeMillis());
                     String line;
                     StringBuilder inputFromLB = new StringBuilder();
@@ -49,6 +52,8 @@ public class Server implements Runnable{
             }
         } catch (IOException e) {
             System.err.println("Error starting server at port " + port + ": " + e.getMessage());
+        } finally {
+            activeConnections.getAndDecrement();
         }
     }
 
@@ -66,10 +71,12 @@ public class Server implements Runnable{
         return response;
     }
 
+    public int getActiveConnections() {
+        return activeConnections.get();
+    }
+
     /**
      * Compare server objects for equality based on port no. value. If current
-     * obj
-     *
      */
     @Override
     public boolean equals(Object obj) {
