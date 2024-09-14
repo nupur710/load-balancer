@@ -13,7 +13,7 @@ public class Main {
     public static void main(String[] args) throws InterruptedException {
         // Start servers
         new Thread(() -> MultipleServers.main(args)).start();
-        Thread.sleep(100);
+        Thread.sleep(1000);
         // Start load balancer
         new Thread(() -> LoadBalancer.main(args)).start();
     }

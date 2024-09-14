@@ -1,9 +1,12 @@
 package org.loadbalancer.client;
 
+import org.apache.log4j.Logger;
+
 import java.io.*;
 
 public class Client implements Runnable {
     Process process;
+    private static final Logger logger= Logger.getLogger(Client.class);
     public Client(Process process)  {
         this.process= process;
     }
@@ -16,9 +19,9 @@ public class Client implements Runnable {
             while ((line = reader.readLine()) != null) {
                 response.append(line).append("\n");
             }
-            System.out.println(response);
+            logger.info("Client ---> Received response from server \n " + response);
         } catch (IOException e) {
-           System.err.println("Error reading input " + e.getMessage());
+            logger.error("Error reading input " + e.getMessage());
         }
     }
 }

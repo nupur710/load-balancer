@@ -1,5 +1,6 @@
 package org.loadbalancer;
 
+import org.apache.log4j.Logger;
 import org.loadbalancer.algorithms.LeastConnections;
 import org.loadbalancer.algorithms.LoadBalancerStrategy;
 import org.loadbalancer.algorithms.WeightedRoundRobin;
@@ -25,10 +26,9 @@ public class LoadBalancer {
     static private int currentIndex = 0;
     static private byte[] buffer = new byte[8192];
     static private LoadBalancerStrategy strategy= new WeightedRoundRobin(12);
-
+    private static final Logger logger= Logger.getLogger(LoadBalancer.class);
     public static void main(String[] args) {
         List<Server> serversRunning = new ArrayList<>();
-        System.out.println("server at port 8080 is " + ServerManager.getServer(8080));
         for (int i = 0; i < noOfServersToRun; i++) {
             serversRunning.add(ServerManager.getServer(serversStartPort+i));
         }
@@ -46,7 +46,7 @@ public class LoadBalancer {
                 });
             }
         } catch (IOException e) {
-            System.err.println("Error in load balancer: " + e.getMessage());
+            logger.error("Error in load balancer: " + e.getMessage());
         }
     }
 
@@ -56,7 +56,7 @@ public class LoadBalancer {
             // Refresh the list of healthy servers for every client request
             List<Server> healthyServers = healthCheck.getHealthyServers();
             if (healthyServers.isEmpty()) {
-                System.err.println("No healthy server available");
+                logger.error("No healthy server available");
                 lbClientOutput.writeUTF("503 Service Unavailable: No healthy servers");
                 return;
             }
@@ -71,10 +71,10 @@ public class LoadBalancer {
                 readResponse(lbClientOutput, lbServerResp, bytesRead);
 
             } catch (IOException e) {
-                System.err.println("Error connecting to server: " + e.getMessage());
+                logger.error("Error connecting to server: " + e.getMessage());
             }
         } catch (IOException e) {
-            System.err.println("Error handling client connection: " + e.getMessage());
+            logger.error("Error handling client connection: " + e.getMessage());
             }
     }
 
@@ -93,7 +93,7 @@ public class LoadBalancer {
                 responseBuffer.write(buffer, 0, bytesRead);
             }
             String responseFromServer = responseBuffer.toString();
-            System.out.println("Resp received from server:\n" + responseFromServer);
+            logger.info("Load balancer ---> Resp received from server:\n" + responseFromServer);
             dos.write(responseBuffer.toByteArray());
             dos.flush();
     }

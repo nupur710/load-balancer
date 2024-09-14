@@ -17,7 +17,6 @@ public class LeastConnections implements LoadBalancerStrategy{
     @Override
     public Server selectServer(List<Server> healthyServers, InetAddress hostIp) {
         if(sessionPersistence.get(hostIp) != null && !isSessionExpired(selectedServer, this.timeOut)) {
-            System.out.println("Selected serv is " + selectedServer);
         } else {
             selectedServer= healthyServers.stream()
                     .min(Comparator.comparingInt(Server::getActiveConnections))

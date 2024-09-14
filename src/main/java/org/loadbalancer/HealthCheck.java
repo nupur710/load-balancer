@@ -4,6 +4,7 @@ import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.log4j.Logger;
 import org.loadbalancer.server.Server;
 
 import java.io.IOException;
@@ -19,8 +20,10 @@ public class HealthCheck implements Runnable {
     private final List<Server> healthyServer;
     private final ScheduledExecutorService scheduler;
     private final int checkInterval;
+    private static final Logger logger= Logger.getLogger(HealthCheck.class);
     HealthCheck(List<Server> ports, int checkInterval) {
         this.ports= ports;
+        System.out.println(ports);
         healthyServer= new ArrayList<>();
         this.scheduler= Executors.newScheduledThreadPool(1);
         this.checkInterval= checkInterval;
@@ -37,16 +40,16 @@ public class HealthCheck implements Runnable {
                     continue; //we compare based on port no because arraylist allows duplicate values
                 }
                 healthyServer.add(s1);
-                System.out.println("added to lb "+ s1.getPort());
+                logger.info("Server at port " + s1.getPort() + " added to healthy servers");
             } else {
                 if (healthyServer.remove(s1)) {
-                    System.out.println("removed from lb " + s1.getPort());
+                    logger.info("Server at port " + s1.getPort() + " removed from healthy servers");
                 } else {
-                    System.out.println("Server does not exist in list");
+                    logger.info("Server at port " + s1.getPort() + " is not a healthy server");
                 }
             }
         }
-        System.out.println("List of healthy servers: " + healthyServer);
+        logger.info("List of healthy servers: " + healthyServer);
     }
 
     private boolean isServerHealthy(Server server) {
@@ -56,7 +59,7 @@ public class HealthCheck implements Runnable {
                 return response.getCode()==200;
             }
         } catch (IOException e) {
-            System.err.println("Error sending HTTP HEAD request to check health of server");
+            logger.error("Error sending HTTP HEAD request to check health of server");
             return false;
         }
     }
@@ -67,7 +70,7 @@ public class HealthCheck implements Runnable {
             int exitCode= process.waitFor();
             return exitCode== 0;
         } catch (Exception e) {
-            System.err.println("Error sending HTTP HEAD request to check health of server");
+            logger.error("Error sending HTTP HEAD request to check health of server");
             return false;
         }
     }

@@ -1,6 +1,8 @@
 
 package org.loadbalancer.server;
 
+import org.apache.log4j.Logger;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -13,6 +15,7 @@ public class Server implements Runnable{
     private AtomicLong lastAccessedTime= new AtomicLong();
     private static final String CRLF= "\r\n";
     private AtomicInteger activeConnections= new AtomicInteger(0);
+    private static final Logger logger= Logger.getLogger(Server.class);
     /**store a list of server instances. These are started when MultipleServers.java
      * is run. We will use this to retrieve server running at a port.
      */
@@ -27,7 +30,7 @@ public class Server implements Runnable{
     @Override
     public void run() {
         try(ServerSocket serverSocket= new ServerSocket(port)) {
-            System.out.println("Server running at port " + port);
+            logger.info("Server running at port " + port);
             while(true) {
                 try(Socket socket= serverSocket.accept();
                     DataOutputStream output= new DataOutputStream(socket.getOutputStream());
@@ -45,13 +48,13 @@ public class Server implements Runnable{
                     //wait before closing connection
                     Thread.sleep(100);
                 } catch (IOException e) {
-                    System.err.println("Error handling request at port " + port + ": " +e.getMessage());
+                    logger.error("Error handling request at port " + port + ": " +e.getMessage());
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
         } catch (IOException e) {
-            System.err.println("Error starting server at port " + port + ": " + e.getMessage());
+            logger.error("Error starting server at port " + port + ": " + e.getMessage());
         } finally {
             activeConnections.getAndDecrement();
         }
@@ -67,7 +70,7 @@ public class Server implements Runnable{
                 "Content-Length: " + responseBody.length() + CRLF +
                 CRLF +
                 responseBody;
-        System.out.println(response);
+   //     logger.info("Server ---> Response from server: \n" + response);
         return response;
     }
 
@@ -76,7 +79,7 @@ public class Server implements Runnable{
     }
 
     /**
-     * Compare server objects for equality based on port no. value. If current
+     * Compare server objects for equality based on port no. value
      */
     @Override
     public boolean equals(Object obj) {
