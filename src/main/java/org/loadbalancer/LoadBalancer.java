@@ -5,37 +5,46 @@ import org.loadbalancer.algorithms.LeastConnections;
 import org.loadbalancer.algorithms.LoadBalancerStrategy;
 import org.loadbalancer.algorithms.WeightedRoundRobin;
 import org.loadbalancer.algorithms.RoundRobin;
+import org.loadbalancer.server.MultipleServers;
 import org.loadbalancer.server.Server;
 import org.loadbalancer.server.ServerManager;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class LoadBalancer {
-    static private int serversStartPort = 8080;
-    static private int noOfServersToRun = 3;
-    static private int currentIndex = 0;
+    static Properties props= new Properties();
     static private byte[] buffer = new byte[8192];
-    static private LoadBalancerStrategy strategy= new WeightedRoundRobin(12);
+    static private LoadBalancerStrategy strategy;
     private static final Logger logger= Logger.getLogger(LoadBalancer.class);
     public static void main(String[] args) {
+        try(InputStream inputStream = LoadBalancer.class.getClassLoader().getResourceAsStream("config.properties")) {
+            props.load(inputStream);
+        } catch (IOException e) {
+            logger.error("Error loading properties file: " + e.getMessage());
+        }
+        String loadBalancerStrategy= props.getProperty("loadbalancer.strategy");
+        long sessionTimeout= Long.parseLong(props.getProperty("sessionTimeout"));
+        int noOfServersToRun= Integer.parseInt(props.getProperty("noOfServers"));
+        int serversStartPort= Integer.parseInt(props.getProperty("server.startPort"));
+        int healthCheckInterval= Integer.parseInt(props.getProperty("healthCheck.interval"));
+        int loadBalancerPort= Integer.parseInt(props.getProperty("loadBalancer.port"));
+        strategy= getLoadBalancerStrategyObj(loadBalancerStrategy, sessionTimeout);
         List<Server> serversRunning = new ArrayList<>();
         for (int i = 0; i < noOfServersToRun; i++) {
             serversRunning.add(ServerManager.getServer(serversStartPort+i));
         }
-        HealthCheck healthCheck = new HealthCheck(serversRunning, 30);
+        HealthCheck healthCheck = new HealthCheck(serversRunning, healthCheckInterval);
         healthCheck.startScheduler();
 
-        try (ServerSocket loadBalancer = new ServerSocket(1221)) {
+        try (ServerSocket loadBalancer = new ServerSocket(loadBalancerPort)) {
             //Handle incoming requests in multiple threads
             ExecutorService threadPool = Executors.newFixedThreadPool(1);
             while (true) {
@@ -96,5 +105,18 @@ public class LoadBalancer {
             logger.info("Load balancer ---> Resp received from server:\n" + responseFromServer);
             dos.write(responseBuffer.toByteArray());
             dos.flush();
+    }
+
+    private static LoadBalancerStrategy getLoadBalancerStrategyObj(String loadBalancerStrategy, long timeout) {
+        switch (loadBalancerStrategy) {
+            case "Round Robin":
+                return new RoundRobin(timeout);
+            case "Weighted Round Robin":
+                return new WeightedRoundRobin(timeout);
+            case "Least Connections":
+                return new LeastConnections(timeout);
+            default:
+                return new RoundRobin(timeout);
+        }
     }
 }
