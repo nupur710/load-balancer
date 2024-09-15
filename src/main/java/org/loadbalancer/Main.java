@@ -1,5 +1,6 @@
 package org.loadbalancer;
 
+import org.apache.log4j.Logger;
 import org.loadbalancer.server.MultipleServers;
 
 /**
@@ -10,11 +11,16 @@ import org.loadbalancer.server.MultipleServers;
  *  LoadBalancer.java class
  */
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
-        // Start servers
-        new Thread(() -> MultipleServers.main(args)).start();
-        Thread.sleep(1000);
-        // Start load balancer
-        new Thread(() -> LoadBalancer.main(args)).start();
+    public static void main(String[] args) {
+        Logger logger= Logger.getLogger(Main.class);
+        try {
+            // Start servers
+            new Thread(() -> MultipleServers.main(args)).start();
+            Thread.sleep(1000);
+            // Start load balancer
+            new Thread(() -> LoadBalancer.main(args)).start();
+        } catch(InterruptedException e) {
+            logger.error("Main thread was interrupted: " + e.getMessage());
+        }
     }
 }
