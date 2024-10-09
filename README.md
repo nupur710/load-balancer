@@ -22,9 +22,11 @@ curl http://localhost:1221
 The load balancer will distribute these requests among the available server instances
 
 Round-Robin strategy:
+
 ![RR](https://github.com/user-attachments/assets/bfae43fe-5af8-47e3-b5bf-f176f80915fd)
 
 Weighted Round-Robin strategy:
+
 ![image](https://github.com/user-attachments/assets/f9d48547-67d1-44fd-aad5-fc477b354248)
 
 Configuration: The following can be configured in src/main/resources/config.properties:
