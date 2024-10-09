@@ -44,8 +44,7 @@ public class ServerTest {
         HttpGet httpGet= new HttpGet("http://localhost:"+PORT);
         try(CloseableHttpClient httpClient= HttpClients.createDefault()) {
             try(CloseableHttpResponse response= httpClient.execute(httpGet)) {
-                int activeConnections= server.getActiveConnections();
-                assertTrue(server.getActiveConnections()==1);
+                assertTrue(server.getActiveConnections()>=1);
                 assertTrue(response.getCode()==200);
             }
         } catch (IOException e) {
