@@ -4,7 +4,7 @@ distributes incoming client requests across multiple server instances to ensure 
 Components/Features:
 1. Server: represents individual server instances
 2. ServerManager: manages creation and retrival of server instances
-3. LoadBalancer: main component that recieves incoming client request and forwards them appropriate server based on specified strategy
+3. LoadBalancer: main component that recieves incoming client request and forwards them to the appropriate server based on specified strategy
 4. HealthCheck: periodically checks health of servers and maintains a list of healthy servers
 5. LoadBalancerStrategy: implements algorithms for load balancing & session persistence:
 	i. Round-Robin
